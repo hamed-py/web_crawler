@@ -1,0 +1,10 @@
+fastapi[all]
+sqlalchemy
+asyncpg
+psycopg2-binary
+httpx[http2]
+beautifulsoup4
+python-dotenv
+redis
+arc
+fastapi-limiter
