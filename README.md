@@ -50,8 +50,6 @@ DATABASE_URL="postgresql://postgres:mysecretpassword@localhost:5432/crawler_db"
 # ۱. ساخت محیط مجازی
 uv venv
 
-# ۲. فعال‌سازی محیط
-
 
 در macOS / Linux:
 
@@ -82,7 +80,7 @@ uv pip sync
 
 (این ترمینال وظایف را از صف برداشته و اجرا می‌کند)
 
-# (محیط .venv فعال است)
+# 
 uv run arq server.worker.WorkerSettings
 
 
@@ -90,7 +88,7 @@ uv run arq server.worker.WorkerSettings
 
 (این ترمینال API سرور را اجرا می‌کند)
 
-# (محیط .venv فعال است)
+#
 uv run uvicorn server.server:app --host 127.0.0.1 --port 8000 --reload
 
 
@@ -98,5 +96,5 @@ uv run uvicorn server.server:app --host 127.0.0.1 --port 8000 --reload
 
 (این ترمینال رابط کاربری دسکتاپ را اجرا می‌کند)
 
-# (محیط .venv فعال است)
+# 
 uv run python client/main.py
