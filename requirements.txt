@@ -6,5 +6,6 @@ httpx[http2]
 beautifulsoup4
 python-dotenv
 redis
-arc
+arq
 fastapi-limiter
+requests
