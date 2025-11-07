@@ -1,19 +1,14 @@
 import redis.asyncio as redis
 from arq.connections import RedisSettings
 
-# مدل DivarListing و Quote حذف و فقط WikipediaArticle باقی ماند
 from shared.database import AsyncSessionLocal, WikipediaArticle
-# DivarCrawler و QuoteCrawler حذف و فقط WikipediaCrawler باقی ماند
 from .crawler import WikipediaCrawler, DataSaverAsync
 
 
 async def run_crawl_task(ctx, task_details: dict):
-    """
-    تابع اصلی اجرای تسک در ورکر.
-    [اصلاح شده] این تابع اکنون فقط کراولر ویکی‌پدیا را پشتیبانی می‌کند.
-    """
+    """تابع اصلی اجرای تسک در ورکر."""
     crawler_name = task_details.get("crawler_name")
-    params = task_details.get("params", {})  # پارامترهای دریافتی از کلاینت
+    params = task_details.get("params", {})
 
     print(f"Worker received job: {ctx['job_id']} for crawler: {crawler_name} with params: {params}")
 
@@ -21,7 +16,7 @@ async def run_crawl_task(ctx, task_details: dict):
     model_class = None
 
     try:
-        # --- بخش داینامیک ساخت کراولر (فقط ویکی‌پدیا) ---
+
         if crawler_name == "wikipedia":
             search_term = params.get("search_term")
             if not search_term:
@@ -32,9 +27,9 @@ async def run_crawl_task(ctx, task_details: dict):
         else:
             raise ValueError(f"کراولر ناشناخته: {crawler_name}")
 
-        # --- بخش اجرای کراول و ذخیره (مشترک) ---
+
         async with AsyncSessionLocal() as db:
-            # متد run کراولر مربوطه اجرا می‌شود
+
             items = await crawler_instance.run()
             if items:
                 saver = DataSaverAsync(db_session=db)
@@ -53,7 +48,6 @@ async def run_crawl_task(ctx, task_details: dict):
         print(f"Worker finished job: {ctx['job_id']}")
 
 
-# --- تنظیمات Redis و ورکر (بدون تغییر) ---
 REDIS_HOST = "127.0.0.1"
 REDIS_PORT = 6379
 redis_settings = RedisSettings(host=REDIS_HOST, port=REDIS_PORT)

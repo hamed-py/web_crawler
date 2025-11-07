@@ -7,7 +7,8 @@ from tkinter import ttk, scrolledtext, messagebox
 import requests
 from typing import List, Dict, Any
 
-# --- تنظیمات Path برای وارد کردن ماژول shared ---
+
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 sys.path.append(project_root)
@@ -16,11 +17,10 @@ from shared import database
 
 
 class CrawlerApp(tk.Tk):
-
     def __init__(self):
         super().__init__()
-        # [فارسی] عنوان برنامه
-        self.title("پنل مدیریت جستجوگر ویکی‌پدیا (نسخه 5.0)")
+
+        self.title("پنل مدیریت جستجوگر ")
         self.geometry("900x650")
 
 
@@ -59,15 +59,15 @@ class CrawlerApp(tk.Tk):
                                         command=self.load_articles_from_db)
         self.btn_load_wiki.pack(side=tk.LEFT, padx=5)
 
-        # --- [جدید] پنجره دوتکه برای نمایش نتایج ---
+
         paned_window = ttk.PanedWindow(frame, orient=tk.HORIZONTAL)
         paned_window.pack(fill=tk.BOTH, expand=True, pady=10)
 
-        # --- پنل سمت چپ (جدول نتایج) ---
+
         tree_frame = ttk.Frame(paned_window)
         paned_window.add(tree_frame, weight=1)
 
-        # تعریف ستون‌ها
+
         self.tree = ttk.Treeview(tree_frame, columns=("title", "summary"), show="headings")
         self.tree.heading("title", text="عنوان مقاله")
         self.tree.heading("summary", text="خلاصه")
@@ -104,7 +104,7 @@ class CrawlerApp(tk.Tk):
             article_data = self.articles_data_map.get(selected_item_id)
 
             if article_data:
-                # ساخت متن جزئیات برای نمایش
+
                 content = (
                     f"عنوان: {article_data.title}\n"
                     f"PageID: {article_data.pageid}\n"
@@ -120,32 +120,28 @@ class CrawlerApp(tk.Tk):
         except Exception as e:
             print(f"Error in on_article_select: {e}")
 
-    # --- توابع امن برای Thread (به‌روزرسانی GUI از نخ‌های دیگر) ---
-
     def set_status(self, message):
-        """آپدیت نوار وضعیت (امن برای Thread)."""
+
         self.after(0, self.status_var.set, message)
 
     def display_articles_in_tree(self, articles: List[Any]):
-        """[جدید] نمایش لیست مقالات در جدول (Treeview)."""
 
         def _display():
-            # پاک کردن جدول و مپ داده
+
             self.tree.delete(*self.tree.get_children())
             self.articles_data_map.clear()
 
-            # افزودن ردیف‌های جدید
+
             for article in articles:
                 values = (article.title, article.summary)
-                # شناسه آیتم در Treeview را ذخیره می‌کنیم
+
                 item_id = self.tree.insert("", tk.END, values=values)
-                # آیتم کامل را در مپ ذخیره می‌کنیم تا با کلیک در دسترس باشد
+
                 self.articles_data_map[item_id] = article
 
         self.after(0, _display)
 
     def display_details_text(self, content: str):
-        """[جدید] نمایش متن جزئیات در کادر سمت راست (امن برای Thread)."""
 
         def _display():
             self.txt_details.configure(state='normal')
@@ -160,16 +156,11 @@ class CrawlerApp(tk.Tk):
 
         def _set_state():
             self.btn_crawl_wiki.config(state=state)
-            # دکمه بارگیری را غیرفعال نمی‌کنیم تا کاربر بتواند همزمان چک کند
-            # self.btn_load_wiki.config(state=state)
 
         self.after(0, _set_state)
 
-    # --- توابع مستقل خواندن از دیتابیس (Sync) ---
-    # تابع load_quotes_from_db حذف شد
-
     def load_articles_from_db(self):
-        """[اصلاح] بارگیری مقالات و نمایش آن‌ها در جدول (Treeview)."""
+
         self.set_status("در حال بارگیری مقالات از پایگاه داده...")
         try:
             with database.SyncSessionLocal() as db:
@@ -188,7 +179,7 @@ class CrawlerApp(tk.Tk):
     # --- بخش مدیریت Job (ارتباط Async با سرور FastAPI) ---
 
     def start_wiki_job_thread(self):
-        """[اصلاح] تابع کمکی برای خواندن ورودی و ساخت دیکشنری تسک ویکی‌پدیا."""
+
         search_term = self.txt_wiki_search.get()
         if not search_term:
             messagebox.showwarning("خطای ورودی", "لطفاً یک عبارت برای جستجو وارد کنید.")
@@ -201,7 +192,7 @@ class CrawlerApp(tk.Tk):
         self.start_job_thread(task_details)
 
     def start_job_thread(self, task_details: dict):
-        """[اصلاح] اجرای چرخه Job در یک نخ جداگانه."""
+
         crawler_name = task_details.get("crawler_name", "unknown")
         self.set_status(f"در حال ارسال درخواست '{crawler_name}' به سرور...")
         self.set_buttons_state(tk.DISABLED)
@@ -214,11 +205,11 @@ class CrawlerApp(tk.Tk):
         job_thread.start()
 
     def run_job_lifecycle(self, task_details: dict):
-        """[فارسی] کل چرخه حیات Job (ارسال، رصد، نتیجه)."""
+
         try:
             job_id = self.submit_job(task_details)
             if not job_id:
-                return  # خطا قبلاً نمایش داده شده
+                return
 
             self.set_status(f"درخواست با ID: {job_id} ارسال شد. در حال رصد وضعیت...")
 
@@ -246,10 +237,10 @@ class CrawlerApp(tk.Tk):
             self.set_status(f"خطا در مدیریت درخواست: {e}")
             self.after(0, messagebox.showerror, "خطای کلاینت", f"خطای پیش‌بینی‌نشده در کلاینت:\n{e}")
         finally:
-            self.set_buttons_state(tk.NORMAL)  # فعال‌سازی مجدد دکمه‌ها
+            self.set_buttons_state(tk.NORMAL)
 
     def submit_job(self, task_details: dict) -> str | None:
-        """[فارسی] گام ۱: Job را به سرور (FastAPI) ارسال می‌کند."""
+
         try:
             response = requests.post(
                 f"{self.server_base_url}/jobs/crawl",
@@ -274,24 +265,24 @@ class CrawlerApp(tk.Tk):
         return None
 
     def check_job_status(self, job_id: str) -> (str, dict):
-        """[بدون تغییر] گام ۲: وضعیت Job را از سرور می‌پرسد."""
+
         response = requests.get(f"{self.server_base_url}/jobs/status/{job_id}", timeout=10)
         response.raise_for_status()
         data = response.json()
         return data.get("status"), data.get("result")
 
     def handle_job_success(self, result: dict):
-        """[فارسی و اصلاح] گام ۳ (موفق): نتایج را نمایش و داده‌ها را رفرش می‌کند."""
+
         found = result.get('found', 0)
         saved = result.get('saved', 0)
         message = f"جستجو با موفقیت انجام شد.\n\nموارد یافت شده: {found}\nموارد جدید ذخیره شده: {saved}\n\nدر حال بارگیری خودکار نتایج جدید از پایگاه داده..."
         self.after(0, messagebox.showinfo, "درخواست موفق", message)
 
-        # [اصلاح] رفرش کردن خودکار جدول نتایج
+
         self.after(0, self.load_articles_from_db)
 
     def handle_job_failure(self, result: dict):
-        """[فARSI] گام ۳ (ناموفق): خطای دریافتی از ورکر را نمایش می‌دهد."""
+
         error = result.get('error', 'خطای ناشناخته در سرور.')
         message = f"فرآیند جستجو در سرور با خطا مواجه شد:\n\n{error}"
         self.after(0, messagebox.showerror, "درخواست ناموفق", message)

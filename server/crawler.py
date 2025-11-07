@@ -1,6 +1,5 @@
 import asyncio
 import json
-
 import httpx
 from bs4 import BeautifulSoup
 from sqlalchemy.dialects.postgresql import insert
@@ -8,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class BaseCrawler:
-    """کلاس پایه کراولر (بدون تغییر)"""
+
 
     def __init__(self, base_url: str, concurrency_limit: int = 5):
         self.base_url = base_url
@@ -47,31 +46,23 @@ class BaseCrawler:
         await self.client.aclose()
 
 
-# QuoteCrawler حذف شد
-
 
 class WikipediaCrawler(BaseCrawler):
-    """[بهبود یافته] کراولر کارا برای جستجو و واکشی متن کامل از API ویکی‌پدیا."""
 
     def __init__(self, search_term: str):
         self.search_term = search_term
         super().__init__(base_url="https://en.wikipedia.org", concurrency_limit=5)
 
     async def run(self) -> list:
-        """
-        [بهبود یافته] متد run اکنون در دو مرحله کار می‌کند:
-        1. جستجو برای یافتن pageid ها.
-        2. واکشی جزئیات کامل (متن و URL) بر اساس pageid ها.
-        """
+
         api_path = "/w/api.php"
 
-        # --- مرحله 1: جستجو ---
         search_params = {
             "action": "query",
             "format": "json",
             "list": "search",
             "srsearch": self.search_term,
-            "srlimit": 20  # [بهبود] افزایش نتایج به 20
+            "srlimit": 20
         }
         search_json_content = await self.fetch_page(url_path=api_path, params=search_params)
         if not search_json_content:
@@ -81,10 +72,10 @@ class WikipediaCrawler(BaseCrawler):
         if not search_results:
             return []
 
-        # --- مرحله 2: واکشی جزئیات بر اساس PageID ---
+
         page_ids = [item["pageid"] for item in search_results if "pageid" in item]
         if not page_ids:
-            return search_results  # فقط نتایج جستجو را برمی‌گردانیم
+            return search_results
 
         details_json_content = await self.fetch_article_details(page_ids)
         if not details_json_content:
@@ -92,7 +83,7 @@ class WikipediaCrawler(BaseCrawler):
 
         details_map = await self.parse_article_details(details_json_content)
 
-        # --- ادغام نتایج ---
+
         final_articles = []
         for item in search_results:
             page_id = item["pageid"]
@@ -103,7 +94,7 @@ class WikipediaCrawler(BaseCrawler):
         return final_articles
 
     async def parse_search_results(self, json_content: str) -> list[dict]:
-        """پاسخ JSON API جستجوی ویکی‌پدیا را پارس می‌کند."""
+
         print(f"Parsing Wikipedia JSON API for '{self.search_term}'...")
         try:
             data = json.loads(json_content)
@@ -130,22 +121,22 @@ class WikipediaCrawler(BaseCrawler):
             return []
 
     async def fetch_article_details(self, page_ids: list[int]) -> str | None:
-        """[جدید] جزئیات کامل مقالات (متن و URL) را بر اساس pageid واکشی می‌کند."""
+
         print(f"Fetching full details for {len(page_ids)} page IDs...")
         api_path = "/w/api.php"
         details_params = {
             "action": "query",
             "format": "json",
             "pageids": "|".join(map(str, page_ids)),
-            "prop": "extracts|info",  # درخواست متن (extract) و اطلاعات (info)
-            "inprop": "url",  # درخواست URL کامل
-            "exintro": False,  # درخواست متن کامل (نه فقط مقدمه)
-            "explaintext": True,  # درخواست متن ساده (نه HTML)
+            "prop": "extracts|info",
+            "inprop": "url",
+            "exintro": False,
+            "explaintext": True,
         }
         return await self.fetch_page(url_path=api_path, params=details_params)
 
     async def parse_article_details(self, json_content: str) -> dict:
-        """[جدید] پاسخ JSON جزئیات مقالات را به یک مپ تبدیل می‌کند."""
+
         details_map = {}
         try:
             data = json.loads(json_content)
@@ -164,14 +155,7 @@ class WikipediaCrawler(BaseCrawler):
             return {}
 
 
-# --- کلاس ذخیره‌ساز آسنکرون (بدون تغییر) ---
-# این کلاس به دلیل استفاده از __unique_constraint_column__ داینامیک،
-# بدون تغییر با مدل جدید WikipediaArticle کار خواهد کرد.
-
 class DataSaverAsync:
-    """
-    مسئول ذخیره ناهمزمان داده‌ها با استفاده از ستون یونیک داینامیک.
-    """
 
     def __init__(self, db_session: AsyncSession):
         self.db = db_session

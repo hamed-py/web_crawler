@@ -12,14 +12,12 @@ from sqlalchemy.future import select
 from shared import database
 from .worker import REDIS_HOST, REDIS_PORT
 
-# [اصلاح] عنوان برنامه فارسی شد
 app = FastAPI(title="API جستجوگر ویکی‌پدیا", version="5.0")
 
 
-# QuoteSchema حذف شد
 
 class WikipediaArticleSchema(BaseModel):
-    """[بهبود یافته] اسکیمای Pydantic برای مقالات ویکی‌پدیا"""
+
     id: int
     pageid: int
     title: str
@@ -31,25 +29,24 @@ class WikipediaArticleSchema(BaseModel):
 
 
 class CrawlRequest(BaseModel):
-    """[بدون تغییر] مدل درخواست ارسال Job"""
+
     crawler_name: str
     params: Dict[str, Any] = {}
 
 
 class JobResponse(BaseModel):
-    """[بدون تغییر] مدل پاسخ ارسال Job"""
+
     job_id: str
     status: str
     message: str
 
 
 class JobStatus(BaseModel):
-    """[بدون تغییر] مدل وضعیت Job"""
+
     status: str
     result: dict | None = None
 
 
-# --- بخش مدیریت رویدادهای FastAPI (بدون تغییر) ---
 
 arq_pool: ArqRedis = None
 
@@ -76,11 +73,10 @@ async def shutdown_event():
     print("FastAPI server shut down gracefully.")
 
 
-# --- اندپوینت‌های API ---
 
 @app.get("/", summary="Root Endpoint")
 async def read_root():
-    """[اصلاح] پیام خوشامدگویی فارسی شد"""
+
     return {"message": "به API جستجوگر سازمانی ویکی‌پدیا خوش آمدید (نسخه 5.0)."}
 
 
@@ -116,9 +112,7 @@ async def submit_crawl_job(request: CrawlRequest):
     summary="بررسی وضعیت یک درخواست جستجو"
 )
 async def get_job_status(job_id: str):
-    """
-    وضعیت یک Job را با استفاده از job_id آن بررسی می‌کند. (بدون تغییر)
-    """
+
     if not arq_pool:
         raise HTTPException(status_code=503, detail="صف کارها در دسترس نیست")
 
